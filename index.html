@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SZAMTO — Restauracja Fast Food | VolistaRP</title>
+  <style>
+    :root {
+      --bg: #0b0c0e;
+      --panel: #14161a;
+      --panel-2: #1c1f26;
+      --border: #2a2f3a;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+      --accent: #f59e0b;
+      --accent-2: #ea580c;
+      --ok: #22c55e;
+      --bad: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); line-height: 1.5; }
+    a { color: var(--accent); }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { cursor: pointer; border: none; border-radius: 10px; padding: 10px 14px; font-weight: 600; transition: .15s; }
+    button:hover { filter: brightness(1.08); }
+    .btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #090a0c; }
+    .btn-ghost { background: var(--panel-2); border: 1px solid var(--border); }
+    .btn-danger { background: rgba(239,68,68,.16); color: #fca5a5; border: 1px solid rgba(239,68,68,.4); }
+    .btn-ok { background: rgba(34,197,94,.16); color: #86efac; border: 1px solid rgba(34,197,94,.4); }
+
+    header {
+      position: sticky; top: 0; z-index: 20;
+      background: rgba(11,12,14,.92); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand img.logo { width: 52px; height: 52px; border-radius: 12px; object-fit: cover; border: 2px solid var(--accent); }
+    .brand-title { font-size: 1.25rem; font-weight: 800; letter-spacing: .5px; color: var(--accent); }
+    .brand-sub { font-size: .8rem; color: var(--muted); }
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: .82rem; font-weight: 700; }
+    .status-open { background: rgba(34,197,94,.15); color: #4ade80; border: 1px solid rgba(34,197,94,.35); }
+    .status-closed { background: rgba(239,68,68,.15); color: #f87171; border: 1px solid rgba(239,68,68,.35); }
+
+    .header-right { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+    .owner-pill { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); padding: 5px 10px; border-radius: 999px; font-size: .82rem; }
+    .owner-pill img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+
+    nav.tabs { max-width: 1320px; margin: 18px auto 0; padding: 0 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .tab-btn { background: var(--panel); border: 1px solid var(--border); color: var(--muted); padding: 10px 16px; border-radius: 10px; }
+    .tab-btn.active { background: var(--accent); color: #090a0c; border-color: var(--accent); }
+
+    main { max-width: 1320px; margin: 18px auto 60px; padding: 0 20px; }
+    .layout-shop { display: grid; grid-template-columns: 1fr 370px; gap: 20px; align-items: start; }
+    @media (max-width: 980px) { .layout-shop { grid-template-columns: 1fr; } }
+
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .card + .card { margin-top: 16px; }
+    h2 { font-size: 1.15rem; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .muted { color: var(--muted); font-size: .88rem; }
+
+    .filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .chip { background: var(--panel-2); border: 1px solid var(--border); padding: 7px 12px; border-radius: 999px; font-size: .85rem; color: var(--muted); }
+    .chip.active { background: rgba(245,158,11,.18); color: var(--accent); border-color: var(--accent); }
+    .search-input { flex: 1; min-width: 180px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
+
+    .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(255px, 1fr)); gap: 12px; }
+    .item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+    .item-top { display: flex; justify-content: space-between; align-items: start; gap: 8px; }
+    .item-name { font-weight: 700; font-size: 1rem; }
+    .item-price { font-weight: 800; color: var(--accent); white-space: nowrap; }
+    .item-desc { font-size: .84rem; color: var(--muted); }
+    .item-cat { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: #fbbf24; opacity: .85; }
+
+    .cart-sticky { position: sticky; top: 84px; }
+    .cart-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow: auto; margin: 10px 0; }
+    .cart-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; background: var(--panel-2); padding: 8px 10px; border-radius: 9px; font-size: .88rem; }
+    .qty-box { display: inline-flex; align-items: center; gap: 6px; }
+    .qty-box button { padding: 3px 8px; border-radius: 6px; background: var(--panel); border: 1px solid var(--border); }
+
+    .cmd-box { background: #090a0c; border: 1px dashed var(--accent); border-radius: 10px; padding: 10px 12px; margin: 10px 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .cmd-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #fde68a; font-weight: 700; font-size: .9rem; word-break: break-all; }
+
+    .field { margin-top: 10px; display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: .84rem; color: var(--muted); }
+    .field input, .field select, .field textarea {
+      background: var(--panel-2); border: 1px solid var(--border); border-radius: 9px; padding: 9px 11px; width: 100%;
+    }
+
+    .districts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+    .district-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 13px; }
+    .district-card.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .district-num { font-size: .75rem; color: var(--accent); font-weight: 800; }
+    .district-name { font-size: 1rem; font-weight: 700; margin: 2px 0 6px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: .9rem; }
+    th, td { border-bottom: 1px solid var(--border); padding: 9px 10px; text-align: left; }
+    th { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .4px; }
+    .badge-role { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .75rem; font-weight: 700; background: rgba(245,158,11,.15); color: #fcd34d; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.72); display: none; align-items: center; justify-content: center; z-index: 50; padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; max-width: 440px; width: 100%; padding: 20px; }
+    .toast {
+      position: fixed; bottom: 20px; right: 20px; z-index: 60; background: var(--panel-2); border: 1px solid var(--accent);
+      color: var(--text); padding: 12px 16px; border-radius: 10px; display: none; max-width: 360px; box-shadow: 0 10px 30px rgba(0,0,0,.45);
+    }
+    .toast.show { display: block; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+    .order-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin-top: 10px; }
+    .order-card img.proof { max-width: 220px; max-height: 150px; border-radius: 8px; margin-top: 8px; display: block; border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <img id="uiLogo" class="logo" alt="SZAMTO Logo" />
+      <div>
+        <div class="brand-title">SZAMTO — RESTAURACJA FAST FOOD</div>
+        <div class="brand-sub">Serwer <strong>VolistaRP</strong> (Mapa Warszawy) • Ekonomia <code>!pay</code></div>
+      </div>
+      <span id="uiStatusBadge" class="status-badge status-open">● OTWARTE</span>
+    </div>
+    <div class="header-right">
+      <div class="owner-pill">
+        <img id="uiAvatar" alt="blackspeed2137" />
+        <span><strong>ANONIM</strong> (@blackspeed2137)</span>
+      </div>
+      <span id="uiSessionTag" class="badge-role" style="display:none;"></span>
+      <button id="btnOpenLogin" class="btn-ghost">🔐 Logowanie / Panel kadry</button>
+      <button id="btnLogout" class="btn-danger" style="display:none;">Wyloguj</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="shop">🍔 Menu i zamówienie</button>
+    <button class="tab-btn" data-tab="map">🗺️ Mapa VolistaRP (18 stref)</button>
+    <button class="tab-btn" data-tab="ranks">🏅 Tabela rang</button>
+    <button class="tab-btn" data-tab="panel" id="tabPanelBtn" style="display:none;">⚙️ Panel zarządzania</button>
+  </nav>
+
+  <main>
+    <!-- ZAKŁADKA 1: SKLEP / ZAMÓWIENIA -->
+    <section id="tab-shop" class="tab-view">
+      <div class="layout-shop">
+        <div class="card">
+          <h2>
+            <span>Menu restauracji SZAMTO</span>
+            <span class="muted" id="menuCountLabel"></span>
+          </h2>
+          <div class="filters">
+            <button class="chip active" data-cat="Wszystkie">Wszystkie</button>
+            <button class="chip" data-cat="Burgery">Burgery</button>
+            <button class="chip" data-cat="Frytki">Frytki</button>
+            <button class="chip" data-cat="Napoje">Napoje</button>
+            <button class="chip" data-cat="Dodatki">Dodatki</button>
+            <button class="chip" data-cat="Zestawy">Zestawy</button>
+            <input id="searchInput" class="search-input" type="search" placeholder="Szukaj pozycji w menu..." />
+          </div>
+          <div id="menuGrid" class="menu-grid"></div>
+        </div>
+
+        <aside class="card cart-sticky">
+          <h2>Koszyk <span class="muted" id="cartCount">0 szt.</span></h2>
+          <div id="cartList" class="cart-list">
+            <div class="muted">Koszyk jest pusty. Dodaj coś z menu!</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.05rem;padding-top:8px;border-top:1px solid var(--border);">
+            <span>Do zapłaty:</span>
+            <span id="cartTotal" style="color:var(--accent);">0 zł</span>
+          </div>
+
+          <div class="cmd-box">
+            <div>
+              <div style="font-size:.74rem;color:var(--muted);">Komenda płatności (UnbelievaBoat):</div>
+              <div id="payCommandText" class="cmd-code">!pay @blackspeed2137 0</div>
+            </div>
+            <button id="btnCopyCmd" class="btn-ghost" type="button">Kopiuj</button>
+          </div>
+
+          <form id="orderForm">
+            <div class="field">
+              <label for="buyerNick">Twój nick (Discord / VolistaRP) *</label>
+              <input id="buyerNick" type="text" required placeholder="np. KowalskiRP" />
+            </div>
+            <div class="field">
+              <label for="deliveryZone">Strefa / dzielnica dostawy (1–18) *</label>
+              <select id="deliveryZone" required></select>
+            </div>
+            <div class="field">
+              <label for="deliveryAddress">Ulica / punkt / numer na mapie *</label>
+              <input id="deliveryAddress" type="text" required placeholder="np. ul. Marszałkowska / punkt 22" />
+            </div>
+            <div class="field">
+              <label for="paymentProof">Screen potwierdzenia płatności <code>!pay</code> *</label>
+              <input id="paymentProof" type="file" accept="image/*" required />
+            </div>
+            <div class="field">
+              <label for="orderNote">Uwagi do zamówienia</label>
+              <textarea id="orderNote" rows="2" placeholder="np. bez cebuli, sos obok..."></textarea>
+            </div>
+            <button id="btnSubmitOrder" class="btn-primary" type="submit" style="width:100%;margin-top:14px;">
+              Wyślij zamówienie
+            </button>
+          </form>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ZAKŁADKA 2: MAPA VOLISTARP (18 STREF) -->
+    <section id="tab-map" class="tab-view" style="display:none;">
+      <div class="card">
+        <h2>
+          <span>Mapa serwera VolistaRP — wszystkie 18 stref / dzielnic</span>
+          <span class="muted">Kliknij „Wybierz strefę”, aby ustawić ją w zamówieniu</span>
+        </h2>
+        <div id="districtsGrid" class="districts-grid"></div>
+      </div>
+    </section>
+
+    <!-- ZAKŁADKA 3: TABELA RANG -->
+    <section id="tab-ranks" class="tab-view" style="display:none;">
+      <div class="card">
+        <h2>Tabela stopni i rang restauracji SZAMTO</h2>
+        <p class="muted">Aktualna struktura stopni w lokalu (bez rang Praktykant oraz Szkoleniowiec).</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Grupa</th>
+              <th>Ranga / stopień</th>
+              <th>Zakres zadań w SZAMTO</th>
+            </tr>
+          </thead>
+          <tbody id="ranksTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ZAKŁADKA 4: PANEL ZARZĄDZANIA (WŁAŚCICIEL / WSPÓŁWŁAŚCICIEL / KIEROWNICTWO / Z-CA KIEROWNIKA) -->
+    <section id="tab-panel" class="tab-view" style="display:none;">
+      <div class="card" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;">
+        <div>
+          <h2 style="margin-bottom:4px;">Panel zarządzania SZAMTO</h2>
+          <div class="muted" id="panelRoleInfo">Zalogowano jako: —</div>
+        </div>
+        <div id="ownerStatusControls" style="display:none;gap:8px;flex-wrap:wrap;">
+          <button id="btnSetOpen" class="btn-ok">🟢 Ustaw: OTWARTE</button>
+          <button id="btnSetClosed" class="btn-danger">🔴 Ustaw: ZAMKNIĘTE</button>
+        </div>
+      </div>
+
+      <!-- ZAMÓWIENIA -->
+      <div class="card">
+        <h2>Zamówienia klientów (<span id="ordersCount">0</span>)</h2>
+        <div id="ordersList"><div class="muted">Brak złożonych zamówień w tej sesji.</div></div>
+      </div>
+
+      <!-- KADRA I ROLE (WŁAŚCICIEL + KIEROWNICTWO) -->
+      <div class="card" id="staffSection">
+        <h2>Kadra i role w restauracji</h2>
+        <form id="addStaffForm" class="grid-2" style="align-items:end;">
+          <div class="field">
+            <label for="staffName">Nick / imię członka kadry *</label>
+            <input id="staffName" type="text" required placeholder="np. Nowak" />
+          </div>
+          <div class="field">
+            <label for="staffRole">Rola / stanowisko *</label>
+            <select id="staffRole">
+              <option value="Współwłaściciel">Współwłaściciel</option>
+              <option value="Zastępca Właściciela">Zastępca Właściciela</option>
+              <option value="Kierownictwo restauracji">Kierownictwo restauracji</option>
+              <option value="Zastępca kierownika">Zastępca kierownika</option>
+              <option value="Pracownik (przyjmowanie zamówień)">Pracownik (przyjmowanie zamówień)</option>
+              <option value="Kucharz / Obsługa">Kucharz / Obsługa</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="staffPin">Kod / hasło logowania (dla ról kierowniczych i współwłaściciela)</label>
+            <input id="staffPin" type="text" placeholder="np. kier123" />
+          </div>
+          <div class="field">
+            <label><input id="staffCanTakeOrders" type="checkbox" checked /> Może przyjmować zamówienia</label>
+          </div>
+          <button class="btn-primary" type="submit">+ Dodaj do kadry</button>
+        </form>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Osoba</th>
+              <th>Rola</th>
+              <th>Kod logowania</th>
+              <th>Przyjmowanie zamówień</th>
+              <th>Akcja</th>
+            </tr>
+          </thead>
+          <tbody id="staffTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- USTAWIENIA DISCORD WEBHOOKA + PINGOWANIE RÓL + BRANDING (TYLKO WŁAŚCICIEL / WSPÓŁWŁAŚCICIEL) -->
+      <div class="card" id="ownerSettingsSection">
+        <h2>Discord Webhook, pingowanie ról i wygląd</h2>
+        <div class="grid-2">
+          <div class="field">
+            <label for="webhookUrl">Adres URL Webhooka Discord</label>
+            <input id="webhookUrl" type="url" placeholder="https://discord.com/api/webhooks/..." />
+          </div>
+          <div class="field">
+            <label for="pingRoleIds">ID ról do pingowania przy zamówieniu (oddzielone przecinkiem)</label>
+            <input id="pingRoleIds" type="text" placeholder="np. 1574372655572844776, 1574372357286658099" />
+          </div>
+        </div>
+        <div class="field">
+          <label><input id="pingEnabled" type="checkbox" checked /> Pinguj powyższe role przy każdym nowym zamówieniu</label>
+        </div>
+
+        <div class="grid-2" style="margin-top:12px;">
+          <div class="field">
+            <label for="uploadLogo">Podmień logo restauracji SZAMTO</label>
+            <input id="uploadLogo" type="file" accept="image/*" />
+          </div>
+          <div class="field">
+            <label for="uploadAvatar">Podmień avatar profilu (@blackspeed2137)</label>
+            <input id="uploadAvatar" type="file" accept="image/*" />
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;">
+          <button id="btnSaveSettings" class="btn-primary" type="button">Zapisz ustawienia</button>
+          <button id="btnTestWebhook" class="btn-ghost" type="button">Wyślij test na Webhook</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL LOGOWANIA -->
+  <div id="loginModal" class="modal-backdrop">
+    <div class="modal">
+      <h2 style="margin-bottom:8px;">Logowanie — Kadra SZAMTO</h2>
+      <p class="muted" style="margin-bottom:12px;">
+        Wpisz hasło właściciela (domyślnie: <code>szamto2137</code>) albo swój kod przypisany do roli Współwłaściciela, Kierownictwa lub Zastępcy kierownika.
+      </p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="loginPass">Hasło / kod dostępu</label>
+          <input id="loginPass" type="password" required placeholder="Wpisz hasło lub kod..." />
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+          <button id="btnCloseLogin" class="btn-ghost" type="button">Anuluj</button>
+          <button class="btn-primary" type="submit">Zaloguj</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script>
+    const PAY_TARGET_NICK = 'blackspeed2137';
+
+    // Domyślne grafiki SVG (można podmienić własnymi plikami w panelu)
+    const DEFAULT_LOGO = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+        <rect width="128" height="128" rx="24" fill="#121418"/>
+        <circle cx="64" cy="64" r="54" fill="none" stroke="#f59e0b" stroke-width="5"/>
+        <path d="M32 52 Q64 24 96 52 Z" fill="#ea580c"/>
+        <rect x="30" y="55" width="68" height="8" rx="4" fill="#22c55e"/>
+        <rect x="30" y="65" width="68" height="9" rx="4" fill="#facc15"/>
+        <rect x="32" y="76" width="64" height="10" rx="5" fill="#78350f"/>
+        <text x="64" y="108" text-anchor="middle" fill="#f59e0b" font-family="Arial Black, sans-serif" font-size="16">SZAMTO</text>
+      </svg>
+    `);
+
+    const DEFAULT_AVATAR = 'data:image/svg+xml;utf8,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+        <rect width="128" height="128" rx="64" fill="#181b20"/>
+        <circle cx="64" cy="48" r="22" fill="#9ca3af"/>
+        <path d="M24 112 C28 84 100 84 104 112 Z" fill="#f59e0b"/>
+      </svg>
+    `);
+
+    const MENU_ITEMS = [
+      // Burgery
+      { id: 1, name: 'Hamburger', cat: 'Burgery', price: 25, desc: 'Klasyczna bułka, soczysty kotlet wołowy, świeża sałata, pomidor i sos firmowy.' },
+      { id: 2, name: 'Cheeseburger', cat: 'Burgery', price: 30, desc: 'Soczysty kotlet wołowy, plaster sera, sałata, ogórek i ketchup.' },
+      { id: 3, name: 'Podwójny Hamburger', cat: 'Burgery', price: 35, desc: 'Dwa kotlety wołowe, świeża sałata, pomidor i sos majonezowy.' },
+      { id: 4, name: 'Podwójny Cheeseburger', cat: 'Burgery', price: 40, desc: 'Dwa kotlety wołowe, podwójny ser, ogórek konserwowy i sos firmowy.' },
+      { id: 5, name: 'Burger z Bekonem', cat: 'Burgery', price: 38, desc: 'Wołowina, chrupiący bekon, ser, sałata i sos BBQ.' },
+      { id: 6, name: 'Burger z Kurczakiem', cat: 'Burgery', price: 32, desc: 'Chrupiący kurczak, sałata, pomidor i delikatny sos czosnkowy.' },
+      { id: 7, name: 'Burger Ostry', cat: 'Burgery', price: 35, desc: 'Wołowina, ser, jalapeño, sałata i pikantny sos.' },
+      { id: 8, name: 'Burger BBQ', cat: 'Burgery', price: 38, desc: 'Wołowina, ser, cebulka, bekon i aromatyczny sos BBQ.' },
+      { id: 9, name: 'Burger SZAMTO', cat: 'Burgery', price: 45, desc: 'Nasza specjalność! Podwójny kotlet, podwójny ser, bekon, sałata i autorski sos SZAMTO.' },
+      { id: 10, name: 'Burger XXL', cat: 'Burgery', price: 50, desc: 'Duża bułka, dwa kotlety, ser, bekon, warzywa i sos firmowy.' },
+
+      // Frytki
+      { id: 11, name: 'Małe Frytki', cat: 'Frytki', price: 10, desc: 'Porcja chrupiących frytek.' },
+      { id: 12, name: 'Średnie Frytki', cat: 'Frytki', price: 14, desc: 'Idealna porcja do każdego burgera.' },
+      { id: 13, name: 'Duże Frytki', cat: 'Frytki', price: 18, desc: 'Większa porcja dla większego głodu.' },
+      { id: 14, name: 'Frytki z Serem', cat: 'Frytki', price: 22, desc: 'Złociste frytki z sosem serowym.' },
+      { id: 15, name: 'Frytki z Bekonem', cat: 'Frytki', price: 25, desc: 'Chrupiące frytki z bekonem i serem.' },
+      { id: 16, name: 'Frytki Pikantne', cat: 'Frytki', price: 18, desc: 'Frytki z aromatyczną przyprawą.' },
+      { id: 17, name: 'Frytki XXL', cat: 'Frytki', price: 25, desc: 'Duża porcja frytek.' },
+      { id: 18, name: 'Frytki z Sosem', cat: 'Frytki', price: 15, desc: 'Frytki z wybranym sosem.' },
+
+      // Napoje
+      { id: 19, name: 'Cola', cat: 'Napoje', price: 10, desc: 'Klasyczny, gazowany napój.' },
+      { id: 20, name: 'Cola Zero', cat: 'Napoje', price: 10, desc: 'Smak coli bez cukru.' },
+      { id: 21, name: 'Fanti', cat: 'Napoje', price: 10, desc: 'Orzeźwiający napój pomarańczowy.' },
+      { id: 22, name: 'Sprajt', cat: 'Napoje', price: 10, desc: 'Cytrynowo-limonkowy napój.' },
+      { id: 23, name: 'Woda Niegazowana', cat: 'Napoje', price: 7, desc: 'Lekka i orzeźwiająca woda.' },
+      { id: 24, name: 'Woda Gazowana', cat: 'Napoje', price: 7, desc: 'Woda z bąbelkami.' },
+      { id: 25, name: 'Sok Pomarańczowy', cat: 'Napoje', price: 12, desc: 'Owocowy sok o smaku pomarańczy.' },
+      { id: 26, name: 'Sok Jabłkowy', cat: 'Napoje', price: 12, desc: 'Klasyczny, słodki sok jabłkowy.' },
+      { id: 27, name: 'Ice Tea', cat: 'Napoje', price: 12, desc: 'Orzeźwiająca herbata mrożona.' },
+      { id: 28, name: 'Lemoniada', cat: 'Napoje', price: 13, desc: 'Orzeźwiający napój cytrynowy.' },
+      { id: 29, name: 'Napój Energetyczny', cat: 'Napoje', price: 15, desc: 'Gazowany napój o energetycznym smaku.' },
+
+      // Dodatki
+      { id: 30, name: 'Dodatkowy Ser', cat: 'Dodatki', price: 5, desc: 'Dodatkowy plaster sera do burgera.' },
+      { id: 31, name: 'Dodatkowy Bekon', cat: 'Dodatki', price: 7, desc: 'Porcja chrupiącego bekonu.' },
+      { id: 32, name: 'Dodatkowy Kotlet', cat: 'Dodatki', price: 10, desc: 'Dodatkowy kotlet wołowy.' },
+      { id: 33, name: 'Sos Czosnkowy', cat: 'Dodatki', price: 4, desc: 'Kremowy sos o smaku czosnku.' },
+      { id: 34, name: 'Sos BBQ', cat: 'Dodatki', price: 4, desc: 'Słodko-wędzony sos barbecue.' },
+      { id: 35, name: 'Ketchup', cat: 'Dodatki', price: 3, desc: 'Klasyczny sos pomidorowy.' },
+      { id: 36, name: 'Sos Ostry', cat: 'Dodatki', price: 4, desc: 'Pikantny sos dla fanów ostrości.' },
+      { id: 37, name: 'Sos Majonezowy', cat: 'Dodatki', price: 4, desc: 'Delikatny sos majonezowy.' },
+
+      // Zestawy
+      { id: 38, name: 'Zestaw Klasyczny', cat: 'Zestawy', price: 42, desc: 'Hamburger + małe frytki + napój.' },
+      { id: 39, name: 'Zestaw Cheeseburger', cat: 'Zestawy', price: 47, desc: 'Cheeseburger + średnie frytki + napój.' },
+      { id: 40, name: 'Zestaw Bekon', cat: 'Zestawy', price: 55, desc: 'Burger z bekonem + duże frytki + napój.' },
+      { id: 41, name: 'Zestaw Kurczak', cat: 'Zestawy', price: 49, desc: 'Burger z kurczakiem + średnie frytki + napój.' },
+      { id: 42, name: 'Zestaw Ostry', cat: 'Zestawy', price: 52, desc: 'Burger ostry + duże frytki + napój.' },
+      { id: 43, name: 'Zestaw SZAMTO', cat: 'Zestawy', price: 60, desc: 'Burger SZAMTO + duże frytki + Cola.' },
+      { id: 44, name: 'Zestaw XXL', cat: 'Zestawy', price: 65, desc: 'Burger XXL + duże frytki + dowolny napój.' }
+    ];
+
+    // Wszystkie 18 stref / dzielnic z mapy VolistaRP
+    const DISTRICTS_18 = [
+      { id: 1, name: 'Łomianki', info: 'ul. Trenów, ul. Warszawska, ul. Rolnicza, ul. Wileńska, ul. Leśna, ul. Brukowa, ul. Łubrowa (pkt 1–10, 69–73, 79, 89, 99–114).' },
+      { id: 2, name: 'Łomianki Dolne', info: 'ul. Rolnicza, ul. Miejska, ul. Żwirki i Figury — tereny nad wodą.' },
+      { id: 3, name: 'Włochy', info: 'ul. KOR, ul. Żwirki i Figury, Al. Pułkownika, ul. Trocka (pkt 300, 303, 901, 901A, 901B, 901/2).' },
+      { id: 4, name: 'Żoliborz', info: 'Bulwary Wiślane, ul. Gwiaździsta, ul. Broniewskiego, ul. Zygmunta Krasińskiego, ul. Graniczna, ul. Radiowa.' },
+      { id: 5, name: 'Wesoła', info: 'Trakt Brzeski, ul. Mrówcza, ul. Korkowa, ul. Eksportowa, ul. Graniczna, ul. Handlowa, ul. Poprzeczna (trasa S2).' },
+      { id: 6, name: 'Ursynów', info: 'Trakt Brzeski, ul. Obrońców, ul. Polczyńska, ul. Batalionów, ul. Powstańców, ul. Krakowska.' },
+      { id: 7, name: 'Bemowo', info: 'ul. Obrońców, ul. Wrocławska, ul. Powstańców, ul. Polczyńska, ul. Katowicka, ul. Gdyńska, ul. Gdańska.' },
+      { id: 8, name: 'Ochota', info: 'Al. Jerozolimskie, ul. Wawelska, ul. Stefana Banacha, ul. Gwiezdna (pkt 30, 31, 102, 400, 401).' },
+      { id: 9, name: 'Śródmieście', info: 'ul. Stefana Starzyńskiego, ul. gen. W. Andersa, Al. Solidarności, ul. Nowolipki, ul. Nowolipie (pkt 1, 22, 23, 23A, 32/33, 62, 64, 87).' },
+      { id: 10, name: 'Wola', info: 'ul. Wolska, ul. 11 Listopada, Al. Niepodległości, Al. Prymasa Tysiąclecia, ul. Przy Parku (pkt 2, 3, 22, 55A, 55B, 88, 89, 111, 301/21).' },
+      { id: 11, name: 'Praga Południe', info: 'Al. Stanów Zjednoczonych, ul. Paryska, ul. Grochowska, ul. Londyńska, ul. Czeska, ul. Kacza, Wał Miedzeszyński, molo (pkt 91–91C).' },
+      { id: 12, name: 'Praga Północ', info: 'ul. Ratuszowa, ul. Stefana Starzyńskiego, ul. Namysłowska, ul. Inżynierska, ul. Saska, ul. Jagiellońska, ul. Kacza.' },
+      { id: 13, name: 'Targówek', info: 'ul. Ludwika Kondratowicza, ul. Codzienna, ul. Suwalska, ul. Łodygowa, ul. Ratuszowa, ul. Młodzieńcza.' },
+      { id: 14, name: 'Ursus', info: 'ul. Kierowców, ul. Traktorzystów, ul. Pilotów, ul. Maszynistów (między trasami S8 i S2).' },
+      { id: 15, name: 'Białołęka', info: 'ul. Światowida, ul. Odkryta, ul. Szwedzka, Trakt Nadwiślański, ul. Traktorzystów (pkt 40–61).' },
+      { id: 16, name: 'Mokotów', info: 'Trakt Brzeski, Al. Niepodległości, ul. Puławska, ul. Krakowska (pkt 222, 300).' },
+      { id: 17, name: 'Wilanów', info: 'ul. Wiertnicza, ul. Syta, Al. Wilanowska, ul. Żwirki i Figury (pkt 21, 88, 94–99).' },
+      { id: 18, name: 'Ząbki', info: 'ul. Piłsudskiego, ul. Reymonta, ul. Powstańców (pkt 21–28, 77).' }
+    ];
+
+    // Tabela stopni i rang restauracji (bez Praktykanta i Szkoleniowca)
+    const RANKS_TABLE = [
+      { group: 'Zarząd', rank: '👑 • Właściciel Restauracji', desc: 'Pełne zarządzanie lokalem, kadrą, finansami, webhookiem i ustawieniami.' },
+      { group: 'Zarząd', rank: '👑 • Zastępca Właściciela', desc: 'Wsparcie właściciela w zarządzaniu restauracją i nadzór nad zespołem.' },
+      { group: 'Kierownictwo', rank: '🛠️ • Kierownictwo restauracji', desc: 'Koordynacja pracy lokalu, zamówień, zmian i zespołu.' },
+      { group: 'Kierownictwo', rank: '🛠️ • Zastępca kierownika', desc: 'Wsparcie kierownictwa w prowadzeniu zmian i obsłudze zamówień.' },
+      { group: 'Pracownicy', rank: '• `[SLZ]` Starszy lider zmiany', desc: 'Nadzorowanie przebiegu zmiany i pracy obsługi/kuchni.' },
+      { group: 'Pracownicy', rank: '• `[LZ]` Lider zmiany', desc: 'Prowadzenie bieżącej zmiany oraz organizacja stanowisk.' },
+      { group: 'Pracownicy', rank: '• `[LZ]` Lider zespołu', desc: 'Koordynacja mniejszego zespołu podczas służby.' },
+      { group: 'Pracownicy', rank: '• `[SK]` Starszy koordynator', desc: 'Wsparcie organizacyjne oraz kontrola realizacji zadań.' },
+      { group: 'Pracownicy', rank: '• `[KS]` Koordynator stanowiska', desc: 'Dbanie o porządek i płynność pracy na wybranym stanowisku.' },
+      { group: 'Pracownicy', rank: '• `[SS]` Starszy specjalista', desc: 'Doświadczony członek zespołu wspierający obsługę.' },
+      { group: 'Pracownicy', rank: '• `[SR]` Specjalista restauracji', desc: 'Samodzielna obsługa klientów i realizacja zadań restauracyjnych.' },
+      { group: 'Pracownicy', rank: '• `[SP]` Starszy pracownik', desc: 'Doświadczony pracownik sali lub kuchni.' },
+      { group: 'Pracownicy', rank: '• `[PR]` Pracownik restauracji', desc: 'Podstawowa obsługa gości i przyjmowanie/realizacja zamówień.' },
+      { group: 'Pracownicy', rank: '• `[MP]` Młodszy pracownik', desc: 'Wdrożenie do pracy na sali lub przy zamówieniach.' },
+      { group: 'Pracownicy', rank: '• `[SK]` Szef kuchni', desc: 'Zarządzanie kuchnią, jakością dań i recepturami.' },
+      { group: 'Pracownicy', rank: '• `[MSK]` Młodszy szef kuchni', desc: 'Wsparcie szefa kuchni oraz nadzór nad przygotowaniem potraw.' },
+      { group: 'Pracownicy', rank: '• `[SK]` Starszy kucharz', desc: 'Przygotowywanie burgerów, zestawów i potraw na wyższym poziomie.' },
+      { group: 'Pracownicy', rank: '• `[K]` Kucharz', desc: 'Przygotowywanie pozycji z menu kuchni.' },
+      { group: 'Pracownicy', rank: '• `[MK]` Młodszy Kucharz', desc: 'Wsparcie w przygotowaniu dań i składników.' },
+      { group: 'Pracownicy', rank: '• `[PK]` Pomocnik kucharza', desc: 'Pomoc kuchenna, przygotowanie składników i porządek.' },
+      { group: 'Pracownicy', rank: '• `[MPK]` Młodszy pomocnik kucharza', desc: 'Podstawowe prace pomocnicze na kuchni.' },
+      { group: 'Pracownicy', rank: '• `[PK]` Praktykant kuchni', desc: 'Przyuczenie do pracy na stanowisku kuchennym.' }
+    ];
+
+    const state = {
+      isOpen: true,
+      ownerPass: 'placek123456',
+      webhookUrl: '',
+      pingRoleIds: '',
+      pingEnabled: true,
+      logoUrl: DEFAULT_LOGO,
+      avatarUrl: DEFAULT_AVATAR,
+      category: 'Wszystkie',
+      search: '',
+      cart: [],
+      orders: [],
+      staff: [
+        { id: 1, name: 'blackspeed2137', role: 'Własciciel', pin: 'wspol2137', canTakeOrders: true }
+      ],
+      session: null // { type: 'owner' | 'staff', label: string, role: string, canTakeOrders: boolean }
+    };
+
+    function showToast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => el.classList.remove('show'), 3200);
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = reject;
+        r.readAsDataURL(file);
+      });
+    }
+
+    function getCartTotal() {
+      return state.cart.reduce((sum, row) => sum + row.price * row.qty, 0);
+    }
+
+    function renderHeader() {
+      document.getElementById('uiLogo').src = state.logoUrl;
+      document.getElementById('uiAvatar').src = state.avatarUrl;
+      const badge = document.getElementById('uiStatusBadge');
+      if (state.isOpen) {
+        badge.className = 'status-badge status-open';
+        badge.textContent = '● OTWARTE';
+      } else {
+        badge.className = 'status-badge status-closed';
+        badge.textContent = '● ZAMKNIĘTE';
+      }
+
+      const tag = document.getElementById('uiSessionTag');
+      const btnLogin = document.getElementById('btnOpenLogin');
+      const btnLogout = document.getElementById('btnLogout');
+      const tabPanel = document.getElementById('tabPanelBtn');
+
+      if (state.session) {
+        tag.style.display = 'inline-block';
+        tag.textContent = `${state.session.role}: ${state.session.label}`;
+        btnLogin.style.display = 'none';
+        btnLogout.style.display = 'inline-block';
+        tabPanel.style.display = 'inline-block';
+      } else {
+        tag.style.display = 'none';
+        btnLogin.style.display = 'inline-block';
+        btnLogout.style.display = 'none';
+        tabPanel.style.display = 'none';
+        if (document.getElementById('tab-panel').style.display !== 'none') {
+          switchTab('shop');
+        }
+      }
+    }
+
+    function renderMenu() {
+      const grid = document.getElementById('menuGrid');
+      const filtered = MENU_ITEMS.filter(item => {
+        const matchCat = state.category === 'Wszystkie' || item.cat === state.category;
+        const q = state.search.trim().toLowerCase();
+        const matchQ = !q || item.name.toLowerCase().includes(q) || item.desc.toLowerCase().includes(q);
+        return matchCat && matchQ;
+      });
+      document.getElementById('menuCountLabel').textContent = `${filtered.length} pozycji`;
+      grid.innerHTML = filtered.map(item => `
+        <div class="item">
+          <div>
+            <div class="item-cat">${item.cat}</div>
+            <div class="item-top">
+              <div class="item-name">${item.name}</div>
+              <div class="item-price">${item.price} zł</div>
+            </div>
+            <p class="item-desc" style="margin-top:6px;">${item.desc}</p>
+          </div>
+          <button class="btn-primary" type="button" onclick="addToCart(${item.id})">+ Dodaj do koszyka</button>
+        </div>
+      `).join('');
+    }
+
+    window.addToCart = function(id) {
+      if (!state.isOpen) {
+        showToast('Restauracja SZAMTO jest obecnie ZAMKNIĘTA.');
+        return;
+      }
+      const item = MENU_ITEMS.find(m => m.id === id);
+      if (!item) return;
+      const existing = state.cart.find(c => c.id === id);
+      if (existing) existing.qty += 1;
+      else state.cart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
+      renderCart();
+      showToast(`Dodano: ${item.name}`);
+    };
+
+    window.changeQty = function(id, delta) {
+      const idx = state.cart.findIndex(c => c.id === id);
+      if (idx === -1) return;
+      state.cart[idx].qty += delta;
+      if (state.cart[idx].qty <= 0) state.cart.splice(idx, 1);
+      renderCart();
+    };
+
+    function renderCart() {
+      const list = document.getElementById('cartList');
+      const total = getCartTotal();
+      const totalQty = state.cart.reduce((s, r) => s + r.qty, 0);
+      document.getElementById('cartCount').textContent = `${totalQty} szt.`;
+      document.getElementById('cartTotal').textContent = `${total} zł`;
+      document.getElementById('payCommandText').textContent = `!pay @${PAY_TARGET_NICK} ${total}`;
+
+      if (!state.cart.length) {
+        list.innerHTML = '<div class="muted">Koszyk jest pusty. Dodaj coś z menu!</div>';
+        return;
+      }
+      list.innerHTML = state.cart.map(r => `
+        <div class="cart-row">
+          <div>
+            <strong>${r.name}</strong><br/>
+            <span class="muted">${r.price} zł / szt.</span>
+          </div>
+          <div class="qty-box">
+            <button type="button" onclick="changeQty(${r.id}, -1)">-</button>
+            <span>${r.qty}</span>
+            <button type="button" onclick="changeQty(${r.id}, 1)">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderDistricts() {
+      const select = document.getElementById('deliveryZone');
+      const currentVal = select.value;
+      select.innerHTML = DISTRICTS_18.map(d => `<option value="${d.id}. ${d.name}">${d.id}. ${d.name}</option>`).join('');
+      if (currentVal) select.value = currentVal;
+
+      const grid = document.getElementById('districtsGrid');
+      grid.innerHTML = DISTRICTS_18.map(d => {
+        const isSel = select.value === `${d.id}. ${d.name}`;
+        return `
+          <div class="district-card ${isSel ? 'selected' : ''}">
+            <div class="district-num">STREFA ${d.id} / 18</div>
+            <div class="district-name">${d.name}</div>
+            <p class="muted" style="margin-bottom:10px;">${d.info}</p>
+            <button class="btn-ghost" type="button" onclick="pickDistrict('${d.id}. ${d.name.replace(/'/g, "\\'")}')">
+              Wybierz strefę
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.pickDistrict = function(val) {
+      document.getElementById('deliveryZone').value = val;
+      renderDistricts();
+      switchTab('shop');
+      showToast(`Wybrano strefę: ${val}`);
+    };
+
+    function renderRanks() {
+      const tbody = document.getElementById('ranksTableBody');
+      tbody.innerHTML = RANKS_TABLE.map(r => `
+        <tr>
+          <td><span class="badge-role">${r.group}</span></td>
+          <td><strong>${r.rank}</strong></td>
+          <td class="muted">${r.desc}</td>
+        </tr>
+      `).join('');
+    }
+
+    function renderPanel() {
+      if (!state.session) return;
+      const s = state.session;
+      const isFullAdmin = s.type === 'owner' || ['Współwłaściciel', 'Zastępca Właściciela'].includes(s.role);
+      const isLeadership = isFullAdmin || ['Kierownictwo restauracji', 'Zastępca kierownika'].includes(s.role);
+
+      document.getElementById('panelRoleInfo').textContent =
+        `Zalogowano jako: ${s.label} (${s.role}) • Przyjmowanie zamówień: ${s.canTakeOrders ? 'TAK' : 'NIE'}`;
+
+      document.getElementById('ownerStatusControls').style.display = isLeadership ? 'flex' : 'none';
+      document.getElementById('staffSection').style.display = isLeadership ? 'block' : 'none';
+      document.getElementById('ownerSettingsSection').style.display = isFullAdmin ? 'block' : 'none';
+
+      // Zamówienia
+      const ordersEl = document.getElementById('ordersList');
+      document.getElementById('ordersCount').textContent = state.orders.length;
+      if (!state.orders.length) {
+        ordersEl.innerHTML = '<div class="muted">Brak złożonych zamówień w tej sesji.</div>';
+      } else {
+        ordersEl.innerHTML = state.orders.slice().reverse().map(o => `
+          <div class="order-card">
+            <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+              <strong>#${o.code} • ${o.buyer}</strong>
+              <span class="badge-role">${o.status}</span>
+            </div>
+            <div class="muted" style="margin-top:4px;">
+              Strefa: <strong>${o.zone}</strong> | Adres: <strong>${o.address}</strong> | Kwota: <strong>${o.total} zł</strong> (<code>!pay @${PAY_TARGET_NICK} ${o.total}</code>)
+            </div>
+            <div style="margin-top:6px;font-size:.9rem;">Pozycje: ${o.itemsText}</div>
+            ${o.note ? `<div class="muted">Uwagi: ${o.note}</div>` : ''}
+            ${o.proofUrl ? `<img class="proof" src="${o.proofUrl}" alt="Potwierdzenie płatności" />` : ''}
+            ${s.canTakeOrders ? `
+              <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+                <button class="btn-ok" type="button" onclick="setOrderStatus('${o.code}', 'Przyjęte')">Przyjmij</button>
+                <button class="btn-ghost" type="button" onclick="setOrderStatus('${o.code}', 'W dostawie')">W dostawie</button>
+                <button class="btn-primary" type="button" onclick="setOrderStatus('${o.code}', 'Dostarczone')">Dostarczone</button>
+              </div>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      // Kadra
+      const staffBody = document.getElementById('staffTableBody');
+      staffBody.innerHTML = state.staff.map(m => `
+        <tr>
+          <td><strong>${m.name}</strong></td>
+          <td><span class="badge-role">${m.role}</span></td>
+          <td><code>${m.pin || '—'}</code></td>
+          <td>${m.canTakeOrders ? '✅ Tak' : '❌ Nie'}</td>
+          <td>
+            ${isFullAdmin ? `<button class="btn-danger" type="button" onclick="removeStaff(${m.id})">Usuń</button>` : '—'}
+          </td>
+        </tr>
+      `).join('');
+
+      // Ustawienia
+      document.getElementById('webhookUrl').value = state.webhookUrl;
+      document.getElementById('pingRoleIds').value = state.pingRoleIds;
+      document.getElementById('pingEnabled').checked = state.pingEnabled;
+    }
+
+    window.setOrderStatus = function(code, status) {
+      const ord = state.orders.find(o => o.code === code);
+      if (!ord) return;
+      ord.status = status;
+      renderPanel();
+      showToast(`Zamówienie #${code}: ${status}`);
+    };
+
+    window.removeStaff = function(id) {
+      state.staff = state.staff.filter(m => m.id !== id);
+      renderPanel();
+      showToast('Usunięto osobę z kadry.');
+    };
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
+      document.querySelectorAll('.tab-view').forEach(v => v.style.display = 'none');
+      document.getElementById(`tab-${tabName}`).style.display = 'block';
+      if (tabName === 'panel') renderPanel();
+    }
+
+    // Zdarzenia nawigacji i filtrów
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        state.category = chip.dataset.cat;
+        renderMenu();
+      });
+    });
+    document.getElementById('searchInput').addEventListener('input', e => {
+      state.search = e.target.value;
+      renderMenu();
+    });
+
+    document.getElementById('btnCopyCmd').addEventListener('click', () => {
+      const cmd = document.getElementById('payCommandText').textContent;
+      navigator.clipboard?.writeText(cmd).catch(() => {});
+      showToast(`Skopiowano: ${cmd}`);
+    });
+
+    // Wysyłka zamówienia + Webhook Discord z pingowaniem ról
+    document.getElementById('orderForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      if (!state.isOpen) {
+        showToast('Restauracja jest obecnie ZAMKNIĘTA.');
+        return;
+      }
+      if (!state.cart.length) {
+        showToast('Dodaj przynajmniej jedną pozycję do koszyka.');
+        return;
+      }
+      const proofFile = document.getElementById('paymentProof').files[0];
+      if (!proofFile) {
+        showToast('Załącz screen potwierdzenia płatności!');
+        return;
+      }
+
+      const total = getCartTotal();
+      const buyer = document.getElementById('buyerNick').value.trim();
+      const zone = document.getElementById('deliveryZone').value;
+      const address = document.getElementById('deliveryAddress').value.trim();
+      const note = document.getElementById('orderNote').value.trim();
+      const proofUrl = await fileToDataUrl(proofFile);
+      const code = `SZM-${Math.floor(1000 + Math.random() * 9000)}`;
+      const itemsText = state.cart.map(r => `${r.name} x${r.qty} (${r.price * r.qty} zł)`).join(', ');
+
+      const order = {
+        code,
+        buyer,
+        zone,
+        address,
+        note,
+        total,
+        itemsText,
+        proofUrl,
+        status: 'Nowe'
+      };
+      state.orders.push(order);
+
+      if (state.webhookUrl) {
+        const pings = state.pingEnabled
+          ? state.pingRoleIds.split(',').map(s => s.trim()).filter(Boolean).map(id => `<@&${id}>`).join(' ')
+          : '';
+        try {
+          const formData = new FormData();
+          const payload = {
+            content: pings ? `🍔 **Nowe zamówienie SZAMTO!** ${pings}` : '🍔 **Nowe zamówienie SZAMTO!**',
+            embeds: [{
+              title: `Zamówienie #${code} — VolistaRP`,
+              color: 0xf59e0b,
+              fields: [
+                { name: 'Klient', value: buyer, inline: true },
+                { name: 'Kwota', value: `${total} zł (\`!pay @${PAY_TARGET_NICK} ${total}\`)`, inline: true },
+                { name: 'Strefa', value: zone, inline: false },
+                { name: 'Adres / punkt', value: address, inline: false },
+                { name: 'Pozycje', value: itemsText.slice(0, 1000), inline: false },
+                { name: 'Uwagi', value: note || 'Brak', inline: false }
+              ],
+              image: { url: `attachment://${proofFile.name}` }
+            }]
+          };
+          formData.append('payload_json', JSON.stringify(payload));
+          formData.append('file', proofFile, proofFile.name);
+          await fetch(state.webhookUrl, { method: 'POST', body: formData });
+        } catch (_) {
+          showToast('Zapisano zamówienie lokalnie (sprawdź URL Webhooka).');
+        }
+      }
+
+      state.cart = [];
+      e.target.reset();
+      renderCart();
+      if (state.session) renderPanel();
+      showToast(`Wysłano zamówienie #${code}!`);
+    });
+
+    // Modal logowania
+    const loginModal = document.getElementById('loginModal');
+    document.getElementById('btnOpenLogin').addEventListener('click', () => loginModal.classList.add('open'));
+    document.getElementById('btnCloseLogin').addEventListener('click', () => loginModal.classList.remove('open'));
+    document.getElementById('btnLogout').addEventListener('click', () => {
+      state.session = null;
+      renderHeader();
+      showToast('Wylogowano.');
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const pass = document.getElementById('loginPass').value.trim();
+      if (pass === state.ownerPass) {
+        state.session = { type: 'owner', label: 'ANONIM', role: 'Właściciel Restauracji', canTakeOrders: true };
+        loginModal.classList.remove('open');
+        e.target.reset();
+        renderHeader();
+        switchTab('panel');
+        showToast('Zalogowano jako Właściciel Restauracji.');
+        return;
+      }
+      const member = state.staff.find(m => m.pin && m.pin === pass);
+      if (member) {
+        state.session = { type: 'staff', label: member.name, role: member.role, canTakeOrders: !!member.canTakeOrders };
+        loginModal.classList.remove('open');
+        e.target.reset();
+        renderHeader();
+        switchTab('panel');
+        showToast(`Zalogowano jako ${member.name} (${member.role}).`);
+        return;
+      }
+      showToast('Nieprawidłowe hasło lub kod dostępu.');
+    });
+
+    // Status lokalu
+    document.getElementById('btnSetOpen').addEventListener('click', () => {
+      state.isOpen = true;
+      renderHeader();
+      showToast('Status: OTWARTE');
+    });
+    document.getElementById('btnSetClosed').addEventListener('click', () => {
+      state.isOpen = false;
+      renderHeader();
+      showToast('Status: ZAMKNIĘTE');
+    });
+
+    // Dodawanie kadry
+    document.getElementById('addStaffForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('staffName').value.trim();
+      const role = document.getElementById('staffRole').value;
+      const pin = document.getElementById('staffPin').value.trim();
+      const canTakeOrders = document.getElementById('staffCanTakeOrders').checked;
+      state.staff.push({ id: Date.now(), name, role, pin, canTakeOrders });
+      e.target.reset();
+      document.getElementById('staffCanTakeOrders').checked = true;
+      renderPanel();
+      showToast(`Dodano: ${name} (${role})`);
+    });
+
+    // Zapis ustawień Webhooka, ról i grafik
+    document.getElementById('btnSaveSettings').addEventListener('click', async () => {
+      state.webhookUrl = document.getElementById('webhookUrl').value.trim();
+      state.pingRoleIds = document.getElementById('pingRoleIds').value.trim();
+      state.pingEnabled = document.getElementById('pingEnabled').checked;
+
+      const logoFile = document.getElementById('uploadLogo').files[0];
+      const avatarFile = document.getElementById('uploadAvatar').files[0];
+      if (logoFile) state.logoUrl = await fileToDataUrl(logoFile);
+      if (avatarFile) state.avatarUrl = await fileToDataUrl(avatarFile);
+
+      renderHeader();
+      showToast('Zapisano ustawienia!');
+    });
+
+    document.getElementById('btnTestWebhook').addEventListener('click', async () => {
+      const url = document.getElementById('webhookUrl').value.trim();
+      if (!url) {
+        showToast('Najpierw wpisz URL Webhooka.');
+        return;
+      }
+      const pings = document.getElementById('pingEnabled').checked
+        ? document.getElementById('pingRoleIds').value.split(',').map(s => s.trim()).filter(Boolean).map(id => `<@&${id}>`).join(' ')
+        : '';
+      try {
+        await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content: pings ? `🔔 Test powiadomienia SZAMTO (VolistaRP) ${pings}` : '🔔 Test powiadomienia SZAMTO (VolistaRP)'
+          })
+        });
+        showToast('Wysłano test na Webhook!');
+      } catch (_) {
+        showToast('Błąd wysyłki testu — sprawdź link Webhooka.');
+      }
+    });
+
+    // Start
+    renderHeader();
+    renderMenu();
+    renderCart();
+    renderDistricts();
+    renderRanks();
+  </script>
+</body>
+</html>
